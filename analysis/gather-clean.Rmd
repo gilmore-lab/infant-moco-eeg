@@ -1,0 +1,161 @@
+---
+title: "gather-clean"
+author: "Rick Gilmore"
+date: "`r Sys.time()`"
+output: github_document
+params:
+  csv_indiv_dir: data/csv_indiv
+  rls_dir:       data/rls_txt
+  zip_dir:       zip/moco-inf-2pat-thresh200
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stringr)
+```
+
+## Purpose
+
+This file 
+
+1. Gathers the infant MOCO EEG files from the lab Box drive
+2. Integrates them with the relevant metadata from the Databrary spreadsheet
+3. Creates a data file for analysis that can also be shared on GitHub because birthdate has been stripped.
+
+## Gathering
+
+RLS.txt and associated data files in which a 200 $\mu$V blink threshold was applied can be found on `~/Box Sync/b-gilmore-lab-group Shared/gilmore-lab/projects/optic-flow/optic-flow-eeg/moco/moco-eeg-lamrad-infant/analysis/data/moco-inf-2pat-thresh200/`. The files are organized in a series of folders by subject ID. ROG downloaded the directory as a .zip file from Box and saved it in `analysis/data/zip`. These files contain identifiable information, however, so they are not version-controlled or pushed to the GitHub repo. The unzipped version is called `inf-2pat-lamrad/analysis/data/zip/moco-inf-2pat-thresh200/`.
+
+The list of participant IDs is as follows:
+
+```{r}
+(particip_dirs <- list.dirs("data/zip/moco-inf-2pat-thresh200"))
+```
+
+There are `r length(particip_dirs)-1` participant directories.
+
+The SSVEP data are contained in the `RLS.txt` files for each participant. Let's first make copies of the `RLS.txt` files, rename them using the participant ID, and copy them to the `analysis/data/rls_txt/` directory.
+
+Make sure there is a target directory.
+
+```{r create-rls_txt-dir}
+if(!(dir.exists("data/rls_txt"))) {
+  dir.create("data/rls_txt")
+  message("Created data/rls_txt")
+} else {
+  message("data/rls_txt exists")
+}
+```
+
+Create the rename function.
+
+```{r}
+Copy_rename_RLS <- function(fdir) {
+  # If RLS.txt exists, creates a copy with the participant ID from the fdir
+  old_fn <- paste0(fdir, "/", "RLS.txt")
+  if(file.exists(old_fn)) {
+    new_fn <- paste0(fdir, "/", basename(fdir), ".txt")
+    file.copy(from = old_fn, new_fn)
+  }
+}
+
+# # test
+# Copy_rename_RLS("data/zip/moco-inf-2pat-thresh200/1003")
+# 
+# # test with particip_dirs
+# Copy_rename_RLS(particip_dirs[2]) # skip 1
+```
+
+Now, rename all of the `RLS.txt` files.
+
+```{r}
+particip_dirs <- particip_dirs[-1] # Drop parent directory
+sapply(particip_dirs, Copy_rename_RLS)
+```
+
+And move them to `data/rls_txt/`
+
+```{r}
+Move_RLS <- function(fdir) {
+  target_fn <- paste0(fdir, "/", basename(fdir), ".txt")
+  if(file.exists(target_fn)) {
+    new_fn <- paste0("data/rls_txt/", basename(target_fn))
+    file.copy(from = target_fn, new_fn)
+  }
+}
+
+# # test Move_RLS
+# Move_RLS(particip_dirs[1])
+
+sapply(particip_dirs, Move_RLS)
+```
+
+## Cleaning
+
+Next, we change the `iSess` variable to the participant_id since the current iSess includes the testing date. We'll export these as CSVs since they now lack the (identifiable) testing date.
+
+```{r}
+Change_iSess <- function(fn) {
+  new_iSess <- str_extract(fn, pattern = '[0-9]+')
+  df <- read.delim(fn, header = TRUE)
+  df$iSess <- new_iSess
+  write.csv(df, file = paste0("data/csv_indiv/", new_iSess, "-rls.csv"), row.names = FALSE)
+}
+
+# Test Change_iSess()
+fl <- list.files("data/rls_txt", full.names = TRUE)
+# Change_iSess(fl[1])
+
+sapply(fl, Change_iSess)
+```
+
+We can now work on the following:
+
+- Adding age in days, tester/experimenter, and gender to the data files based on the Databrary spreadsheet. Alternatively, these variables are in the `SsnHeader.txt` file for each participant. 
+
+```{r}
+Create_session_metadata <- function(fdir) {
+  session_fn <- paste0(fdir, "/", "SsnHeader.txt")
+  if(file.exists(session_fn)) {
+    df <- read.delim(session_fn)
+    out_fn <- paste0("data/csv_indiv/", basename(fdir), "-session.csv")
+    df_out <- df[,c('Operator','DayAge', 'Sex')]
+    df_out$iSess <- basename(fdir)
+    write.csv(df_out, file = out_fn, row.names = FALSE)
+  }
+}
+
+# Test
+#Create_session_metadata("data/zip/moco-inf-2pat-thresh200/1003/")
+#Create_session_metadata(particip_dirs[2])
+sapply(particip_dirs, Create_session_metadata)
+```
+
+This exercise is an excellent example of why writing small, simple functions is such a good idea. I wish I'd learned that lesson a long time ago.
+
+Now, it should be pretty easy to merge the session and SSVEP data files.
+
+```{r}
+Merge_VEP_session_data <- function(sess_id) {
+  rls_fn <- paste0("data/csv_indiv/", sess_id, "-rls.csv")
+  session_fn <- paste0("data/csv_indiv/", sess_id, "-session.csv")
+  if ((file.exists(rls_fn)) & (file.exists(session_fn))) {
+    df_rls <- read.csv(rls_fn)
+    df_session <- read.csv(session_fn)
+    df_merged <- left_join(df_rls, df_session, by = "iSess")
+    write.csv(df_merged, paste0("data/csv_indiv/", sess_id, 
+                                "-merged.csv"), row.names = FALSE)
+  } else {
+    message("Can't merge files for this session.")
+  }
+}
+
+# Test Merge_VEP_session_data
+#Merge_VEP_session_data("1003")
+
+session_ids <- unique(str_extract(list.files("data/csv_indiv"), "[0-9]+"))
+sapply(session_ids, Merge_VEP_session_data)
+```
+
+We are now ready to "drop" variables that we don't need for the analysis, but we can do that when we import the CSVs as data frames.

@@ -1,7 +1,7 @@
 gather-clean
 ================
 Rick Gilmore
-2017-10-03 11:19:23
+2017-10-05 11:15:04
 
 Purpose
 -------
@@ -406,3 +406,5 @@ sapply(session_ids, Merge_VEP_session_data)
     ## 
     ## $`1092`
     ## NULL
+
+We are now ready to "drop" variables that we don't need for the analysis, but we can do that when we import the CSVs as data frames.

@@ -1,6 +1,5 @@
 # moco-inf-2pat-lamrad-manscript-2016
 
-
 ## Methods and Materials
 ### Participants
 X infants, (X  female) between three and 8 months of age participated in the study. The mean age was X months (SD=X). The sample consisted of infants drawn from a database of families in Centre County, Pennsylvania. Infants were excluded if they were born prematurely, had a history of serious visual or medical problems, epilepsy, or seizures. All infants tested had normal pattern vision as evaluated with Teller Acuity Cards, a measure of visual function designed for non-verbal participants. We obtained written consent to participate from parents or guardians on behalf of the infants under procedures approved by the Institutional Review Board of The Pennsylvania State University (#37946). The research was conducted according to the principles expressed in the Declaration of Helsinki.

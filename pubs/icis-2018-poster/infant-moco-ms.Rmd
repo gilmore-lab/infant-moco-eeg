@@ -8,15 +8,18 @@ params:
 ---
 
 ```{r setup, include=FALSE}
+# Documentation about code chunks http://rmarkdown.rstudio.com/lesson-3.html
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, error = FALSE)
-library(dplyr, readr)
+library(dplyr)
+library(readr)
+library(ggplot2)
 ```
 
 ## Introduction
 
 ## Methods and Materials
 
-```{r load-dataset, me}
+```{r load-dataset, echo=FALSE}
 # Create merged data file from analysis/data/csv_indiv/nnnn-merged.csv
 # Are these files on GitHub repo? If not, ROG needs to push
 # 
@@ -35,19 +38,33 @@ moco_merged <- Reduce(function(x,y) full_join(x,y, all=TRUE), moco_merged_list)
 
 ### Participants
 
-```{r calculate-participant-demographics}
+```{r calculate-participant-demographics, include=FALSE}
 moco_merged %>%
-  select(DayAge) %>%
-  summarise(MinDays = min(DayAge), MaxDays=max(DayAge), MeanDays=mean(DayAge)) ->
+  select(iSess, DayAge, Sex) %>%
+  mutate(MinDays = min(DayAge), MaxDays=max(DayAge), MeanDays=mean(DayAge)) ->
   age_dist
 
-moco_merged %>%
-  select(iSess) %>%
-  group_by(iSess) %>%
-  summarise(n_Infants = n()) ->
-  n_infants
+min_days <- unique(age_dist['MinDays'])
+max_days <- unique(age_dist['MaxDays'])
+mean_days <- unique(age_dist['MeanDays'])
+
+age_dist %>%
+  group_by(Sex) %>%
+  summarize(nSubs = n_distinct(iSess)) ->
+  females_males
+
+# moco_merged %>%
+#   select(iSess) %>%
+#   group_by(iSess) %>%
+#   summarise(n_Infants = n()) ->
+#   n_infants
 ```
-Twenty-four infants, (13  female) between `r age_dist['MinDays']` and `r age_dist['MaxDays']` days (mean = `r age_dist['MeanDays']` participated in the study.
+
+```{r age-hist, include=FALSE}
+hist(unique(age_dist$DayAge))
+```
+
+Twenty-four infants, (`r females_males[1,'nSubs']` female; mean age: `r round(mean_days/7,1)` weeks; range `r round(min_days/7,1)`-`r round(max_days/7,1)` weeks) participated in the study.
 The sample consisted of infants drawn from a database of families in Centre County, Pennsylvania. 
 Infants were excluded if they were born prematurely, had a history of serious visual or medical problems, epilepsy, or seizures. 
 All infants tested had normal pattern vision as evaluated with Teller Acuity Cards, a measure of visual function designed for non-verbal participants. 
@@ -89,7 +106,63 @@ A 128-channel HydroCel Geodesic Sensor Net (Electrical Geodesics, Inc.) was used
 
 ## Results
 
-```{r participant-level-summaries}
+```{r snr-gt2}
+# SNR analysis
+moco_merged %>%
+  select(iSess, SNR) %>%
+  mutate(SNRgt2 = (SNR > 2)) %>%
+  filter(SNRgt2 == TRUE) %>%
+  group_by(iSess) %>%
+  summarize(nChans = n()) ->
+  chans_SNRgt2
+chans_SNRgt2
 
+hist(chans_SNRgt2$nChans)
+```
+
+```{r}
+moco_merged %>%
+  select(iSess, DayAge, SNR) %>%
+  mutate(SNRgt2 = (SNR > 2)) %>%
+  filter(SNRgt2 == TRUE) %>%
+  group_by(iSess, DayAge) %>%
+  summarize(nChans = n()) %>%
+  ggplot() +
+  aes(DayAge/7, nChans) +
+  geom_point() +
+  xlab("Age in weeks")
+```
+
+Odd that the older infants have the same (n=15) channels that meet the SNR > 2 threshold.
+
+```{r add-condition-indicators}
+# conds 1-4:
+# radial, radial, linear, linear
+# slow, fast, slow, fast (5 arcmin/update; 20 arcmin/update; 2deg/s; 8deg/s)
+
+moco_merged$Speed <- NA
+moco_merged$Speed[moco_merged$iCond == 1] <- "2deg/s"
+moco_merged$Speed[moco_merged$iCond == 3] <- "2deg/s"
+moco_merged$Speed[moco_merged$iCond == 2] <- "8deg/s"
+moco_merged$Speed[moco_merged$iCond == 4] <- "8deg/s"
+
+moco_merged$Pattern <- NA
+moco_merged$Pattern[moco_merged$iCond == 1] <- "Radial"
+moco_merged$Pattern[moco_merged$iCond == 2] <- "Radial"
+moco_merged$Pattern[moco_merged$iCond == 3] <- "Linear"
+moco_merged$Pattern[moco_merged$iCond == 4] <- "Linear"
+names(moco_merged)[4] <- "Channel"
+
+# See if compute_t2_circ runs
+#compute_t2_circ(100, moco_merged, "2F1", "Radial", "2deg/s")
+#NaN NaN   2  -4
+# Gives odd results so check carefully.
+
+# Can we plot a scatterplot with Sr, Si and one point for each participant, given a condition in the study (Pattern, Speed combo) at a harmonic and a channel.
+
+# Look at conditions for iSess = 1098
+moco_merged %>%
+  filter(iSess != 1098) ->
+  moco_merged
 ```
 

@@ -1,7 +1,7 @@
 infant-moco
 ================
 Rick Gilmore & Alyssa Pandos & Andrea Seisler
-2017-10-27 10:54:28
+2017-11-03 11:45:13
 
 Introduction
 ------------
@@ -9,39 +9,9 @@ Introduction
 Methods and Materials
 ---------------------
 
-``` r
-# Create merged data file from analysis/data/csv_indiv/nnnn-merged.csv
-# Are these files on GitHub repo? If not, ROG needs to push
-# 
-# load_moco <- function(fn){
-#  df <- read.csv(fn)
-#}
-# List files that match the nnnn-merged.csv pattern in analysis/data/csv_indiv/
-file_list <- (list.files(params$data_dir, pattern = "merged\\.csv$", full.names = TRUE))
-
-# Then run the load_moco() function along this list.
-moco_merged_list <- lapply(file_list, readr::read_csv)
-
-# Then merge the list of 
-moco_merged <- Reduce(function(x,y) full_join(x,y, all=TRUE), moco_merged_list)
-```
-
 ### Participants
 
-``` r
-moco_merged %>%
-  select(DayAge) %>%
-  summarise(MinDays = min(DayAge), MaxDays=max(DayAge), MeanDays=mean(DayAge)) ->
-  age_dist
-
-moco_merged %>%
-  select(iSess) %>%
-  group_by(iSess) %>%
-  summarise(n_Infants = n()) ->
-  n_infants
-```
-
-Twenty-four infants, (13 female) between 125 and 265 days (mean = 194.9285714 participated in the study. The sample consisted of infants drawn from a database of families in Centre County, Pennsylvania. Infants were excluded if they were born prematurely, had a history of serious visual or medical problems, epilepsy, or seizures. All infants tested had normal pattern vision as evaluated with Teller Acuity Cards, a measure of visual function designed for non-verbal participants. We obtained written consent to participate from parents or guardians on behalf of the infants under procedures approved by the Institutional Review Board of The Pennsylvania State University (\#37946). The research was conducted according to the principles expressed in the Declaration of Helsinki.
+Twenty-four infants, (13 female; mean age: 27.8 weeks; range 17.9-37.9 weeks) participated in the study. The sample consisted of infants drawn from a database of families in Centre County, Pennsylvania. Infants were excluded if they were born prematurely, had a history of serious visual or medical problems, epilepsy, or seizures. All infants tested had normal pattern vision as evaluated with Teller Acuity Cards, a measure of visual function designed for non-verbal participants. We obtained written consent to participate from parents or guardians on behalf of the infants under procedures approved by the Institutional Review Board of The Pennsylvania State University (\#37946). The research was conducted according to the principles expressed in the Declaration of Helsinki.
 
 ### Stimuli
 
@@ -58,3 +28,84 @@ A 128-channel HydroCel Geodesic Sensor Net (Electrical Geodesics, Inc.) was used
 
 Results
 -------
+
+``` r
+# SNR analysis
+moco_merged %>%
+  select(iSess, SNR) %>%
+  mutate(SNRgt2 = (SNR > 2)) %>%
+  filter(SNRgt2 == TRUE) %>%
+  group_by(iSess) %>%
+  summarize(nChans = n()) ->
+  chans_SNRgt2
+chans_SNRgt2
+```
+
+    ## # A tibble: 24 x 2
+    ##    iSess nChans
+    ##    <int>  <int>
+    ##  1  1003     15
+    ##  2  1015     15
+    ##  3  1019     15
+    ##  4  1023     15
+    ##  5  1038     15
+    ##  6  1044     15
+    ##  7  1047     15
+    ##  8  1049     15
+    ##  9  1051     15
+    ## 10  1052     15
+    ## # ... with 14 more rows
+
+``` r
+hist(chans_SNRgt2$nChans)
+```
+
+![](infant-moco-ms_files/figure-markdown_github-ascii_identifiers/snr-gt2-1.png)
+
+``` r
+moco_merged %>%
+  select(iSess, DayAge, SNR) %>%
+  mutate(SNRgt2 = (SNR > 2)) %>%
+  filter(SNRgt2 == TRUE) %>%
+  group_by(iSess, DayAge) %>%
+  summarize(nChans = n()) %>%
+  ggplot() +
+  aes(DayAge/7, nChans) +
+  geom_point() +
+  xlab("Age in weeks")
+```
+
+![](infant-moco-ms_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-1-1.png)
+
+Odd that the older infants have the same (n=15) channels that meet the SNR &gt; 2 threshold.
+
+``` r
+# conds 1-4:
+# radial, radial, linear, linear
+# slow, fast, slow, fast (5 arcmin/update; 20 arcmin/update; 2deg/s; 8deg/s)
+
+moco_merged$Speed <- NA
+moco_merged$Speed[moco_merged$iCond == 1] <- "2deg/s"
+moco_merged$Speed[moco_merged$iCond == 3] <- "2deg/s"
+moco_merged$Speed[moco_merged$iCond == 2] <- "8deg/s"
+moco_merged$Speed[moco_merged$iCond == 4] <- "8deg/s"
+
+moco_merged$Pattern <- NA
+moco_merged$Pattern[moco_merged$iCond == 1] <- "Radial"
+moco_merged$Pattern[moco_merged$iCond == 2] <- "Radial"
+moco_merged$Pattern[moco_merged$iCond == 3] <- "Linear"
+moco_merged$Pattern[moco_merged$iCond == 4] <- "Linear"
+names(moco_merged)[4] <- "Channel"
+
+# See if compute_t2_circ runs
+#compute_t2_circ(100, moco_merged, "2F1", "Radial", "2deg/s")
+#NaN NaN   2  -4
+# Gives odd results so check carefully.
+
+# Can we plot a scatterplot with Sr, Si and one point for each participant, given a condition in the study (Pattern, Speed combo) at a harmonic and a channel.
+
+# Look at conditions for iSess = 1098
+moco_merged %>%
+  filter(iSess != 1098) ->
+  moco_merged
+```

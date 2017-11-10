@@ -133,8 +133,6 @@ moco_merged %>%
   xlab("Age in weeks")
 ```
 
-Odd that the older infants have the same (n=15) channels that meet the SNR > 2 threshold.
-
 ```{r add-condition-indicators}
 # conds 1-4:
 # radial, radial, linear, linear

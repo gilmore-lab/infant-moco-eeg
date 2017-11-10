@@ -1,7 +1,7 @@
 gather-clean
 ================
 Rick Gilmore
-2017-10-05 11:15:04
+2017-11-10 12:48:51
 
 Purpose
 -------
@@ -23,27 +23,34 @@ The list of participant IDs is as follows:
 (particip_dirs <- list.dirs("data/zip/moco-inf-2pat-thresh200"))
 ```
 
-    ##  [1] "data/zip/moco-inf-2pat-thresh200"     
-    ##  [2] "data/zip/moco-inf-2pat-thresh200/1003"
-    ##  [3] "data/zip/moco-inf-2pat-thresh200/1015"
-    ##  [4] "data/zip/moco-inf-2pat-thresh200/1019"
-    ##  [5] "data/zip/moco-inf-2pat-thresh200/1023"
-    ##  [6] "data/zip/moco-inf-2pat-thresh200/1038"
-    ##  [7] "data/zip/moco-inf-2pat-thresh200/1044"
-    ##  [8] "data/zip/moco-inf-2pat-thresh200/1047"
-    ##  [9] "data/zip/moco-inf-2pat-thresh200/1049"
-    ## [10] "data/zip/moco-inf-2pat-thresh200/1051"
-    ## [11] "data/zip/moco-inf-2pat-thresh200/1052"
-    ## [12] "data/zip/moco-inf-2pat-thresh200/1061"
-    ## [13] "data/zip/moco-inf-2pat-thresh200/1064"
-    ## [14] "data/zip/moco-inf-2pat-thresh200/1068"
-    ## [15] "data/zip/moco-inf-2pat-thresh200/1069"
-    ## [16] "data/zip/moco-inf-2pat-thresh200/1070"
-    ## [17] "data/zip/moco-inf-2pat-thresh200/1071"
-    ## [18] "data/zip/moco-inf-2pat-thresh200/1072"
-    ## [19] "data/zip/moco-inf-2pat-thresh200/1092"
+    ##  [1] "data/zip/moco-inf-2pat-thresh200"                                          
+    ##  [2] "data/zip/moco-inf-2pat-thresh200/1003"                                     
+    ##  [3] "data/zip/moco-inf-2pat-thresh200/1015"                                     
+    ##  [4] "data/zip/moco-inf-2pat-thresh200/1019"                                     
+    ##  [5] "data/zip/moco-inf-2pat-thresh200/1023"                                     
+    ##  [6] "data/zip/moco-inf-2pat-thresh200/1038"                                     
+    ##  [7] "data/zip/moco-inf-2pat-thresh200/1044"                                     
+    ##  [8] "data/zip/moco-inf-2pat-thresh200/1047"                                     
+    ##  [9] "data/zip/moco-inf-2pat-thresh200/1049"                                     
+    ## [10] "data/zip/moco-inf-2pat-thresh200/1051"                                     
+    ## [11] "data/zip/moco-inf-2pat-thresh200/1052"                                     
+    ## [12] "data/zip/moco-inf-2pat-thresh200/1061"                                     
+    ## [13] "data/zip/moco-inf-2pat-thresh200/1064"                                     
+    ## [14] "data/zip/moco-inf-2pat-thresh200/1068"                                     
+    ## [15] "data/zip/moco-inf-2pat-thresh200/1069"                                     
+    ## [16] "data/zip/moco-inf-2pat-thresh200/1070"                                     
+    ## [17] "data/zip/moco-inf-2pat-thresh200/1071"                                     
+    ## [18] "data/zip/moco-inf-2pat-thresh200/1072"                                     
+    ## [19] "data/zip/moco-inf-2pat-thresh200/1092"                                     
+    ## [20] "data/zip/moco-inf-2pat-thresh200/1093"                                     
+    ## [21] "data/zip/moco-inf-2pat-thresh200/1095"                                     
+    ## [22] "data/zip/moco-inf-2pat-thresh200/1096"                                     
+    ## [23] "data/zip/moco-inf-2pat-thresh200/1099"                                     
+    ## [24] "data/zip/moco-inf-2pat-thresh200/1100"                                     
+    ## [25] "data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed"     
+    ## [26] "data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed/1098"
 
-There are 18 participant directories.
+There are 25 participant directories.
 
 The SSVEP data are contained in the `RLS.txt` files for each participant. Let's first make copies of the `RLS.txt` files, rename them using the participant ID, and copy them to the `analysis/data/rls_txt/` directory.
 
@@ -86,42 +93,80 @@ particip_dirs <- particip_dirs[-1] # Drop parent directory
 sapply(particip_dirs, Copy_rename_RLS)
 ```
 
-    ## data/zip/moco-inf-2pat-thresh200/1003 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1015 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1019 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1023 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1038 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1044 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1047 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1049 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1051 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1052 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1061 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1064 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1068 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1069 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1070 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1071 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1072 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1092 
-    ##                                 FALSE
+    ## $`data/zip/moco-inf-2pat-thresh200/1003`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1015`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1019`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1023`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1038`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1044`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1047`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1049`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1051`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1052`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1061`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1064`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1068`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1069`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1070`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1071`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1072`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1092`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1093`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1095`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1096`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1099`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1100`
+    ## [1] FALSE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed/1098`
+    ## [1] FALSE
 
 And move them to `data/rls_txt/`
 
@@ -140,42 +185,80 @@ Move_RLS <- function(fdir) {
 sapply(particip_dirs, Move_RLS)
 ```
 
-    ## data/zip/moco-inf-2pat-thresh200/1003 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1015 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1019 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1023 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1038 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1044 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1047 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1049 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1051 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1052 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1061 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1064 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1068 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1069 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1070 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1071 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1072 
-    ##                                 FALSE 
-    ## data/zip/moco-inf-2pat-thresh200/1092 
-    ##                                 FALSE
+    ## $`data/zip/moco-inf-2pat-thresh200/1003`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1015`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1019`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1023`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1038`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1044`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1047`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1049`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1051`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1052`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1061`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1064`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1068`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1069`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1070`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1071`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1072`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1092`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1093`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1095`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1096`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1099`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1100`
+    ## [1] TRUE
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed/1098`
+    ## [1] TRUE
 
 Cleaning
 --------
@@ -249,6 +332,24 @@ sapply(fl, Change_iSess)
     ## NULL
     ## 
     ## $`data/rls_txt/1092.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1093.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1095.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1096.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1098.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1099.txt`
+    ## NULL
+    ## 
+    ## $`data/rls_txt/1100.txt`
     ## NULL
 
 We can now work on the following:
@@ -325,6 +426,27 @@ sapply(particip_dirs, Create_session_metadata)
     ## NULL
     ## 
     ## $`data/zip/moco-inf-2pat-thresh200/1092`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1093`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1095`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1096`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1099`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/1100`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed`
+    ## NULL
+    ## 
+    ## $`data/zip/moco-inf-2pat-thresh200/Exclude until Trials 1-2 are removed/1098`
     ## NULL
 
 This exercise is an excellent example of why writing small, simple functions is such a good idea. I wish I'd learned that lesson a long time ago.
@@ -405,6 +527,24 @@ sapply(session_ids, Merge_VEP_session_data)
     ## NULL
     ## 
     ## $`1092`
+    ## NULL
+    ## 
+    ## $`1093`
+    ## NULL
+    ## 
+    ## $`1095`
+    ## NULL
+    ## 
+    ## $`1096`
+    ## NULL
+    ## 
+    ## $`1098`
+    ## NULL
+    ## 
+    ## $`1099`
+    ## NULL
+    ## 
+    ## $`1100`
     ## NULL
 
 We are now ready to "drop" variables that we don't need for the analysis, but we can do that when we import the CSVs as data frames.

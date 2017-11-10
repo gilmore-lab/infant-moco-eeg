@@ -5,6 +5,7 @@ p <- df %>%
     ggplot() +
     aes(x = Sr, y = Si) +
     geom_point() +
-    facet_grid(Speed ~ Pattern)
+    facet_grid(Speed ~ Pattern) +
+    ggtitle(paste0("Channel ", chan, ": ", harm))
 p
 }

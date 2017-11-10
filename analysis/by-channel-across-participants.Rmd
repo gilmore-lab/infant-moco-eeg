@@ -1,0 +1,77 @@
+---
+title: "By Channel Across Participants"
+author: "Rick Gilmore"
+date: "`r Sys.time()`"
+output: 
+  github_document:
+    toc: true
+  html_document:
+    toc: true
+params:
+  doc_dir: analysis
+  data_dir: data/csv_indiv/
+  harmonic: 1F1
+---
+
+## Description
+
+This document produces scatter plots of the real and imaginary SSVEP components at the harmonic given by the YAML parameter, `params$harmonic`, for all 128 channels. The default harmonic value is `r params$harmonic`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = FALSE)
+library(dplyr)
+library(readr)
+library(ggplot2)
+```
+
+```{r Plot-channel-harm}
+Plot_channel_harm <- function(chan, harm, df){
+p <- df %>% 
+    filter(Channel == chan, Harm == harm) %>% 
+    select(iSess, Sr, Si, Pattern, Speed) %>% 
+    ggplot() +
+    aes(x = Sr, y = Si) +
+    geom_point() +
+    facet_grid(Speed ~ Pattern) +
+    ggtitle(paste0("Channel ", chan, ": ", harm))
+p
+}
+```
+
+```{r load-merge-clean}
+file_list <- (list.files(params$data_dir, pattern = "merged\\.csv$", full.names = TRUE))
+
+# Then run the load_moco() function along this list.
+moco_df_list <- lapply(file_list, readr::read_csv)
+
+# Then merge the list of 
+moco_df <- Reduce(function(x,y) full_join(x,y, all=TRUE), moco_df_list)
+
+# conds 1-4:
+# radial, radial, linear, linear
+# slow, fast, slow, fast (5 arcmin/update; 20 arcmin/update; 2deg/s; 8deg/s)
+
+moco_df$Speed <- NA
+moco_df$Speed[moco_df$iCond == 1] <- "2deg/s"
+moco_df$Speed[moco_df$iCond == 3] <- "2deg/s"
+moco_df$Speed[moco_df$iCond == 2] <- "8deg/s"
+moco_df$Speed[moco_df$iCond == 4] <- "8deg/s"
+
+moco_df$Pattern <- NA
+moco_df$Pattern[moco_df$iCond == 1] <- "Radial"
+moco_df$Pattern[moco_df$iCond == 2] <- "Radial"
+moco_df$Pattern[moco_df$iCond == 3] <- "Linear"
+moco_df$Pattern[moco_df$iCond == 4] <- "Linear"
+
+moco_df$Channel <- as.numeric(substr(moco_df$iCh, 3, 5))
+```
+
+## Plots
+
+```{r plot-one-channel}
+chans <- 1:128
+lapply(chans, Plot_channel_harm, params$harmonic, moco_df)
+# Plot_channel_harm(moco_df, 1, "1F1")
+# Plot_channel_harm(moco_df, 2, "1F1")
+```
+

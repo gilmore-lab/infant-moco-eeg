@@ -151,7 +151,9 @@ moco_merged$Pattern[moco_merged$iCond == 1] <- "Radial"
 moco_merged$Pattern[moco_merged$iCond == 2] <- "Radial"
 moco_merged$Pattern[moco_merged$iCond == 3] <- "Linear"
 moco_merged$Pattern[moco_merged$iCond == 4] <- "Linear"
-names(moco_merged)[4] <- "Channel"
+
+moco_merged$Channel <- as.numeric(substr(moco_merged$iCh, 3, 5))
+#names(moco_merged)[4] <- "Channel"
 
 # See if compute_t2_circ runs
 #compute_t2_circ(100, moco_merged, "2F1", "Radial", "2deg/s")
@@ -166,3 +168,31 @@ moco_merged %>%
   moco_merged
 ```
 
+### Effects for pattern and speed
+
+<!-- 2017-11-10 Found duplication of data in 1099. Fixed. Need to adapt code below and re-run to see if "residuals" error persists. -->
+
+```{r figX-channel-wise-effects}
+source("../../analysis/R/compute_chan_effects.R")
+source("../../analysis/R/manova_channel.R")
+
+form <- cbind(Sr, Si) ~ Pattern*Speed + Error(iSess)
+#chan_eff <- compute_chan_effects(moco_merged, params$harmonic, form)
+chan_eff <- compute_chan_effects(moco_merged, "1F1", form)
+df_chan_stats <- make_stats_df(chan_eff, df_egi)
+plot_channel_effects(df_chan_stats, harm=params$harmonic, group=params$group, topoplot_fullpath, plot_titles=params$plot_titles)
+```
+
+### Mean amplitude plots of `r params$harmonic` channels meeting `r paste('p< ', params$p_thresh, sep='')` for `r init_cap(params$group)` participants.
+
+```{r figX-vector-amplitude-barplots-pattern}
+plot_channel_magnitudes(df_chan_stats, moco_merged, params$group, params$harmonic, "Pattern", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```
+
+```{r figX-vector-amplitude-barplots-speed}
+plot_channel_magnitudes(df_chan_stats, moco_merged, params$group, params$harmonic, "Speed", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```
+
+```{r figX-vector-amplitude-barplots-pattbyspd}
+plot_channel_magnitudes(df_chan_stats, moco_merged, params$group, params$harmonic, "Patt_Spd", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```

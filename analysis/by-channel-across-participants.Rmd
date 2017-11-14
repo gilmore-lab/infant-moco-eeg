@@ -10,7 +10,10 @@ output:
 params:
   doc_dir: analysis
   data_dir: data/csv_indiv/
+  egi_path: data/egi.csv
   harmonic: 1F1
+  test_mode: TRUE
+  group: Infants
 ---
 
 ## Description
@@ -22,6 +25,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = FA
 library(dplyr)
 library(readr)
 library(ggplot2)
+library(tidyr)
+source("R/init_cap.R")
 ```
 
 ```{r Plot-channel-harm}
@@ -42,36 +47,274 @@ p
 file_list <- (list.files(params$data_dir, pattern = "merged\\.csv$", full.names = TRUE))
 
 # Then run the load_moco() function along this list.
-moco_df_list <- lapply(file_list, readr::read_csv)
+df_moco_list <- lapply(file_list, readr::read_csv)
 
 # Then merge the list of 
-moco_df <- Reduce(function(x,y) full_join(x,y, all=TRUE), moco_df_list)
+df_moco <- Reduce(function(x,y) full_join(x,y, all=TRUE), df_moco_list)
 
 # conds 1-4:
 # radial, radial, linear, linear
 # slow, fast, slow, fast (5 arcmin/update; 20 arcmin/update; 2deg/s; 8deg/s)
 
-moco_df$Speed <- NA
-moco_df$Speed[moco_df$iCond == 1] <- "2deg/s"
-moco_df$Speed[moco_df$iCond == 3] <- "2deg/s"
-moco_df$Speed[moco_df$iCond == 2] <- "8deg/s"
-moco_df$Speed[moco_df$iCond == 4] <- "8deg/s"
+df_moco$Speed <- NA
+df_moco$Speed[df_moco$iCond == 1] <- "2deg/s"
+df_moco$Speed[df_moco$iCond == 3] <- "2deg/s"
+df_moco$Speed[df_moco$iCond == 2] <- "8deg/s"
+df_moco$Speed[df_moco$iCond == 4] <- "8deg/s"
 
-moco_df$Pattern <- NA
-moco_df$Pattern[moco_df$iCond == 1] <- "Radial"
-moco_df$Pattern[moco_df$iCond == 2] <- "Radial"
-moco_df$Pattern[moco_df$iCond == 3] <- "Linear"
-moco_df$Pattern[moco_df$iCond == 4] <- "Linear"
+df_moco$Pattern <- NA
+df_moco$Pattern[df_moco$iCond == 1] <- "Radial"
+df_moco$Pattern[df_moco$iCond == 2] <- "Radial"
+df_moco$Pattern[df_moco$iCond == 3] <- "Linear"
+df_moco$Pattern[df_moco$iCond == 4] <- "Linear"
 
-moco_df$Channel <- as.numeric(substr(moco_df$iCh, 3, 5))
+df_moco$Channel <- as.numeric(substr(df_moco$iCh, 3, 5))
+
+# Drop unused cols
+df_moco <- df_moco %>%
+  select(iSess, DayAge, Sex, Channel, Harm, Speed, Pattern, Sr, Si)
 ```
 
 ## Plots
 
-```{r plot-one-channel}
+```{r plot-all-channels}
 chans <- 1:128
-lapply(chans, Plot_channel_harm, params$harmonic, moco_df)
-# Plot_channel_harm(moco_df, 1, "1F1")
-# Plot_channel_harm(moco_df, 2, "1F1")
+lapply(chans, Plot_channel_harm, params$harmonic, df_moco)
+# Plot_channel_harm(df_moco, 1, "1F1")
+# Plot_channel_harm(df_moco, 2, "1F1")
 ```
 
+## ANOVA
+
+```{r channel-wise-anova}
+#form_maov <- cbind(Sr, Si) ~ Pattern*Speed + Error(iSess)
+form_sr <- Sr ~ Pattern*Speed + Error(iSess)
+form_si <- Si ~ Pattern*Speed + Error(iSess)
+
+AOV_by_channel_harm <- function(Ch, H, df, form) {
+  df <- df_moco %>%
+    filter(Channel == Ch, Harm == H)
+  a <- summary(aov(form, df))
+  a
+}
+
+if (params$test_mode) {
+  test_1_1F1_Sr <- AOV_by_channel_harm(1,"1F1", df_moco, form_sr)
+}
+```
+
+### Sr summaries
+
+```{r}
+chan_aov_sr <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_sr)
+```
+
+### Si summaries
+
+```{r}
+chan_aov_si <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_si)
+```
+
+### Topo plot
+
+```{r extract-stats}
+Extract_stats <- function(model_list) {
+  ml = unlist(model_list)
+  new_vals <- as.numeric( c( ml['Error: Within.F value1'], 
+                             ml['Error: Within.F value2'], 
+                             ml['Error: Within.F value3'], 
+                             ml['Error: Within.Df1'], 
+                             ml['Error: Within.Df2'], 
+                             ml['Error: Within.Df3'],
+                             ml['Error: Within.Df4'], 
+                             ml['Error: Within.Df4'], 
+                             ml['Error: Within.Df4'], 
+                             ml['Error: Within.Pr(>F)1'], 
+                             ml['Error: Within.Pr(>F)2'], 
+                             ml['Error: Within.Pr(>F)3']) )
+  names(new_vals) <- c("F-Pattern", "F-Speed", "F-Patt*Spd", "df-Pattern", "df-Speed", "df-Patt*Spd", "df-Pattern-denom", "df-Speed-denom", "df-Patt*Spd-denom", "p-Pattern", "p-Speed", "p-Patt*Spd")
+  rbind(new_vals)
+}
+
+if (params$test_mode) {
+  (Extract_stats(test_1_1F1_Sr))
+}
+```
+
+Prepare to plot topo plot
+
+```{r}
+# Load EGI coordinates
+df_egi <- read_csv(params$egi_path)
+
+# Declare function to make statistics data frame from list
+Make_stats_df <- function(aov_summ, df_egi, component="Sr") {
+  # Extract stats and assemble into data frame
+  list_stats <- data.frame(t(sapply(aov_summ, Extract_stats)))
+  names(list_stats) <- rep( c("Pattern", "Speed", "Patt_Spd"), 4)
+  list_F <- list_stats[,1:3]
+  list_dfNum <- list_stats[,4:6]
+  list_dfDen <- list_stats[,7:9]
+  list_dfp <- list_stats[,10:12]
+  
+  F_val <- data.frame(list_F) %>% gather(Effect, F_val, Pattern:Patt_Spd)
+  dfNum <- data.frame(list_dfNum) %>% gather(Effect, dfNum, Pattern:Patt_Spd)
+  dfDen <- data.frame(list_dfDen) %>% gather(Effect, dfDen, Pattern:Patt_Spd)
+  pvals <- data.frame(list_dfp) %>% gather(Pvals, pvals, Pattern:Patt_Spd)
+  
+  df_stats <- data.frame(Chan = rep( 1:128, 3), 
+                         Cond = rep(c("Pattern", "Speed", "Patt_Spd"), 
+                                    c(128, 128, 128)),
+                         Fvals = F_val[,2],
+                         FdfNum = dfNum[,2],
+                         FdfDen = dfDen[,2],
+                         Pvals = pvals[,2],
+                         xpos=rep(df_egi$xpos,3),
+                         ypos=rep(df_egi$ypos,3))
+  
+  # Cut pvals
+  pvals_cuts = c(-.01,.0001, .0005, .001, .005, .01, .05, 1)
+  pvals_lbls = c("<.0001","<.0005", "<.001", "<.005", "<.01", "<.05", "ns")
+  
+  # Create cuts based on p-value levels
+  Pvals_cuts = cut( df_stats$Pvals, breaks=pvals_cuts, labels=pvals_lbls)
+  Pvals_cuts = ordered( Pvals_cuts, levels = rev( pvals_lbls ) )
+  df_stats$Pvals_cuts = Pvals_cuts
+  
+  # Change order of Conditions for plotting
+  df_stats$Cond = ordered( df_stats$Cond, levels=c("Pattern", "Speed", "Patt_Spd"))
+  
+  # Add Sr/Si component
+  df_stats$Component <- component
+  df_stats
+}
+
+if (params$test_mode) {
+  (Make_stats_df(chan_aov_sr, df_egi, "Sr"))
+  (Make_stats_df(chan_aov_sr, df_egi, "Sr"))
+}
+```
+
+
+```{r channel-effects-plot}
+Plot_channel_effects <- function(df, harm, group, plot_titles) {
+  yquiet = scale_y_continuous("", breaks=NULL)
+  xquiet = scale_x_continuous("", breaks=NULL)
+  
+  # Plot theme for channel topo
+  pl_theme_topo <- theme(plot.title = element_text(lineheight=.8, 
+                                                   face ="bold", 
+                                                   vjust=2, 
+                                                   size=rel(1.6)),
+                         legend.title=element_text(size=0),
+                         legend.text=element_text(size=rel(1)),
+                         legend.position="bottom",
+                         strip.text = element_text(size = rel(1.5))
+                         
+  )
+  
+  pl_title <- paste(init_cap(group), " Group:\nChannel-wise effects for ", harm, sep="" )
+  
+  # Plot
+  pl <- ggplot(data=df, aes(x=xpos, 
+                            y=ypos, 
+                            color=Pvals_cuts, 
+                            size=Pvals_cuts)) +
+    geom_point() +
+    facet_grid(facets = Component ~ Cond) +
+    coord_fixed() + 
+    xquiet + 
+    yquiet +
+    pl_theme_topo
+  
+  # Add ears, nose
+  # topo_ears_nose <- make_ears_nose_overlay(topoplot_fullpath)
+  # pl + annotation_custom(topo_ears_nose, xmin=-Inf, xmax=Inf, ymin=-Inf, ymax=Inf)
+  
+  if (plot_titles) {
+    pl + ggtitle(pl_title)
+  } else {
+    pl
+  }
+}
+
+if (params$test_mode) {
+  df_chan_stats_Sr <- Make_stats_df(chan_aov_sr, df_egi, "Sr")
+#  df_chan_stats_Sr$Component <- "Sr"
+#  Plot_channel_effects(df_chan_stats, "1F1", "Infant - Sr", TRUE)
+  
+  df_chan_stats_Si <- Make_stats_df(chan_aov_si, df_egi, "Si")
+#  df_chan_stats_Si$Component <- "Si"
+#  Plot_channel_effects(df_chan_stats, "1F1", "Infant - Si", TRUE)
+
+  df_stats <- rbind(df_chan_stats_Sr, df_chan_stats_Si)
+  Plot_channel_effects(df_stats, "1F1", "Infants", TRUE)
+}
+```
+
+### Mean amplitude plots of `r params$harmonic` channels meeting `r paste('p< ', params$p_thresh, sep='')` for `r init_cap(params$group)` participants.
+
+There are remaining bugs in the code below. The filtering operation using the `%in%` command seems the problematic bit.
+
+```{r select-chans-below-thresh-plot}
+Select_chans_below <- function(df_chan_stats, cond, p_thresh) {
+  df_chans_below <- df_chan_stats %>% 
+    filter(Cond == cond, Pvals < p_thresh) %>%
+    select(Chan) %>%
+    unique() ->
+    selected_chans
+  selected_chans
+}
+
+Compute_channel_vector_amplitudes <- function(df_chan_stats, df_moco, this_harm, cond, p_thresh) {
+  
+  chans_below <- Select_chans_below(df_chan_stats, cond, p_thresh)
+
+  if (length(chans_below) > 0) {
+  
+  # Calculate within participant, then across participant vector means & ampl.
+  # This is calculated from full moco dataset.
+  # Have to use standard eval commands for dplyr, e.g., group_by_() and quote()
+  
+  # Within participants...
+  df_below_thresh <- df_moco %>%
+    filter(Channel %in% chans_below, Harm == this_harm) %>%
+    group_by_(quote(Channel), cond, quote(iSess)) %>%
+    summarise(sr.sub.mean=mean(Sr), 
+              si.sub.mean=mean(Si),
+              rms.amp.sub=sqrt(sr.sub.mean^2+si.sub.mean^2)) %>%
+  # Average across participants  
+    group_by_(quote(Channel), cond) %>%
+    summarise(sr.group.mean=mean(sr.sub.mean),
+              si.group.mean=mean(si.sub.mean),
+              sr.group.sd=sd(sr.sub.mean),
+              si.group.sd=sd(si.sub.mean),
+              rms.amp=sqrt(sr.group.mean^2 + si.group.mean^2),
+              rms.amp.sem = mean(rms.amp.sub)/sqrt(n()),
+              nsubs=n(),
+              sr.group.sem=mean(sr.sub.mean)/sqrt(n()),
+              si.group.sem=mean(si.sub.mean)/sqrt(n())
+    )
+  }
+}
+
+if (params$test_mode) {
+  df_chan_stats <- rbind(Make_stats_df(chan_aov_sr, df_egi, "Sr"), 
+                         Make_stats_df(chan_aov_sr, df_egi, "Si"))
+  (Select_chans_below(df_chan_stats, "Speed", ".05"))
+  #(Compute_channel_vector_amplitudes(df_chan_stats, df_moco, "1F1", "Speed", ".05"))
+}
+```
+
+
+```{r figX-vector-amplitude-barplots-pattern}
+# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Pattern", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```
+
+```{r figX-vector-amplitude-barplots-speed}
+# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Speed", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```
+
+```{r figX-vector-amplitude-barplots-pattbyspd}
+# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Patt_Spd", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+```

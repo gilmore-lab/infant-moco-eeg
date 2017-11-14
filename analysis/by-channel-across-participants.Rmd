@@ -14,6 +14,8 @@ params:
   harmonic: 1F1
   test_mode: TRUE
   group: Infants
+  p_thresh: .01
+  plot_titles: FALSE
 ---
 
 ## Description
@@ -31,7 +33,7 @@ source("R/init_cap.R")
 
 ```{r Plot-channel-harm}
 Plot_channel_harm <- function(chan, harm, df){
-p <- df %>% 
+  p <- df %>% 
     filter(Channel == chan, Harm == harm) %>% 
     select(iSess, Sr, Si, Pattern, Speed) %>% 
     ggplot() +
@@ -39,7 +41,7 @@ p <- df %>%
     geom_point() +
     facet_grid(Speed ~ Pattern) +
     ggtitle(paste0("Channel ", chan, ": ", harm))
-p
+  p
 }
 ```
 
@@ -73,30 +75,35 @@ df_moco$Channel <- as.numeric(substr(df_moco$iCh, 3, 5))
 # Drop unused cols
 df_moco <- df_moco %>%
   select(iSess, DayAge, Sex, Channel, Harm, Speed, Pattern, Sr, Si)
+
+# Clean-up
+rm(df_moco_list, file_list)
 ```
 
 ## Plots
 
 ```{r plot-all-channels}
-chans <- 1:128
-lapply(chans, Plot_channel_harm, params$harmonic, df_moco)
-# Plot_channel_harm(df_moco, 1, "1F1")
-# Plot_channel_harm(df_moco, 2, "1F1")
+if (params$test_mode) {
+  Plot_channel_harm(1, "1F1", df_moco)
+} else {
+  chans <- 1:128
+  lapply(chans, Plot_channel_harm, params$harmonic, df_moco)
+}
 ```
 
 ## ANOVA
 
 ```{r channel-wise-anova}
 #form_maov <- cbind(Sr, Si) ~ Pattern*Speed + Error(iSess)
-form_sr <- Sr ~ Pattern*Speed + Error(iSess)
-form_si <- Si ~ Pattern*Speed + Error(iSess)
-
 AOV_by_channel_harm <- function(Ch, H, df, form) {
   df <- df_moco %>%
     filter(Channel == Ch, Harm == H)
   a <- summary(aov(form, df))
   a
 }
+
+form_sr <- Sr ~ Pattern*Speed + Error(iSess)
+form_si <- Si ~ Pattern*Speed + Error(iSess)
 
 if (params$test_mode) {
   test_1_1F1_Sr <- AOV_by_channel_harm(1,"1F1", df_moco, form_sr)
@@ -106,13 +113,14 @@ if (params$test_mode) {
 ### Sr summaries
 
 ```{r}
-chan_aov_sr <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_sr)
+chans <- 1:128
+chan_aov_Sr <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_sr)
 ```
 
 ### Si summaries
 
 ```{r}
-chan_aov_si <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_si)
+chan_aov_Si <- lapply(chans, AOV_by_channel_harm, params$harmonic, df_moco, form_si)
 ```
 
 ### Topo plot
@@ -190,8 +198,8 @@ Make_stats_df <- function(aov_summ, df_egi, component="Sr") {
 }
 
 if (params$test_mode) {
-  (Make_stats_df(chan_aov_sr, df_egi, "Sr"))
-  (Make_stats_df(chan_aov_sr, df_egi, "Sr"))
+  (Make_stats_df(chan_aov_Sr, df_egi, "Sr"))
+  (Make_stats_df(chan_aov_Si, df_egi, "Si"))
 }
 ```
 
@@ -239,31 +247,27 @@ Plot_channel_effects <- function(df, harm, group, plot_titles) {
 }
 
 if (params$test_mode) {
-  df_chan_stats_Sr <- Make_stats_df(chan_aov_sr, df_egi, "Sr")
-#  df_chan_stats_Sr$Component <- "Sr"
-#  Plot_channel_effects(df_chan_stats, "1F1", "Infant - Sr", TRUE)
-  
-  df_chan_stats_Si <- Make_stats_df(chan_aov_si, df_egi, "Si")
-#  df_chan_stats_Si$Component <- "Si"
-#  Plot_channel_effects(df_chan_stats, "1F1", "Infant - Si", TRUE)
-
-  df_stats <- rbind(df_chan_stats_Sr, df_chan_stats_Si)
-  Plot_channel_effects(df_stats, "1F1", "Infants", TRUE)
+  (df_chan_stats_Sr <- Make_stats_df(chan_aov_Sr, df_egi, "Sr"))
+  (df_chan_stats_Si <- Make_stats_df(chan_aov_Si, df_egi, "Si"))
+  (df_stats <- rbind(df_chan_stats_Sr, df_chan_stats_Si))
+  Plot_channel_effects(df_stats, "1F1", "Test", TRUE)
+} else {
+  df_stats <- rbind(Make_stats_df(chan_aov_Sr, df_egi, "Sr"),
+                    Make_stats_df(chan_aov_Si, df_egi, "Si"))
+  Plot_channel_effects(df_stats, params$this_harm, params$group, params$plot_titles)
 }
 ```
 
 ### Mean amplitude plots of `r params$harmonic` channels meeting `r paste('p< ', params$p_thresh, sep='')` for `r init_cap(params$group)` participants.
 
-There are remaining bugs in the code below. The filtering operation using the `%in%` command seems the problematic bit.
-
 ```{r select-chans-below-thresh-plot}
-Select_chans_below <- function(df_chan_stats, cond, p_thresh) {
-  df_chans_below <- df_chan_stats %>% 
+Select_chans_below <- function(df, cond, p_thresh) {
+  df %>% 
     filter(Cond == cond, Pvals < p_thresh) %>%
     select(Chan) %>%
     unique() ->
-    selected_chans
-  selected_chans
+    chans_below
+  as.numeric(unlist(chans_below))
 }
 
 Compute_channel_vector_amplitudes <- function(df_chan_stats, df_moco, this_harm, cond, p_thresh) {
@@ -299,22 +303,94 @@ Compute_channel_vector_amplitudes <- function(df_chan_stats, df_moco, this_harm,
 }
 
 if (params$test_mode) {
-  df_chan_stats <- rbind(Make_stats_df(chan_aov_sr, df_egi, "Sr"), 
-                         Make_stats_df(chan_aov_sr, df_egi, "Si"))
-  (Select_chans_below(df_chan_stats, "Speed", ".05"))
-  #(Compute_channel_vector_amplitudes(df_chan_stats, df_moco, "1F1", "Speed", ".05"))
+  (Select_chans_below(df_stats, "Speed", .01))
+  (Compute_channel_vector_amplitudes(df_stats, df_moco, "1F1", "Speed", .01))
 }
 ```
 
+```{r def-plot-channel-mag-function}
+Plot_channel_magnitudes <- function(df_chan_stats, df_moco, 
+                                    this_group, this_harm, cond, p_thresh,
+                                    plot_titles = FALSE) {
+  
+  df_plot <- Compute_channel_vector_amplitudes(df_chan_stats, 
+                                               df_moco, this_harm, cond,
+                                               p_thresh)
+  
+  if (!(is.null(df_plot))) {
+    # Prepare to plot
+    limits <- aes(ymax = rms.amp + rms.amp.sem, ymin = rms.amp)
+    dodge <- position_dodge(width=0.8)
+    pl_title <- paste(init_cap(this_group), 
+                      " Group:\nChannels Meeting Criterion for ", 
+                      cond, " at ", this_harm, sep="")
+    
+    pl_theme_bar <- theme(plot.title = element_text(lineheight=.8, 
+                                                    face ="bold", 
+                                                    vjust=2, size = rel(2.0)),
+                          panel.background = element_rect(fill=NA),
+                          panel.grid.major = element_blank(),
+                          panel.grid.minor = element_blank(),
+                          panel.border = element_rect(fill=NA, 
+                                                      color="black", size=.8,
+                                                      linetype="solid"),
+                          axis.title.x=element_text(vjust=-.6, size=rel(1.8)),
+                          axis.title.y=element_text(face="bold", vjust=1,
+                                                    size=rel(1.8)),
+                          axis.text=element_text(color="black", size=rel(1.0),
+                                                 angle=90),
+                          legend.title=element_blank(),
+                          legend.text=element_text(size=rel(1.6)), 
+                          legend.position="bottom",
+                          legend.background=element_blank())
+    
+    pl <- ggplot(df_plot) +
+      aes_string(x="as.factor(Channel)", y="rms.amp", fill=cond) + 
+      geom_bar(stat="identity", width=0.8, position=dodge) +
+      geom_errorbar(limits, position=dodge, width=0.15) +
+      xlab("Channel") +
+      ylab(expression(paste("RMS amplitude (", mu, "V)", sep=""))) +
+      pl_theme_bar
+    
+    if (plot_titles) {
+      pl + ggtitle(pl_title)     
+    } else {
+      pl
+    }
+    
+  } else {
+    cat('No data to plot for ', cond, '.\n', sep="")
+    return()
+  }
+}
+```
 
 ```{r figX-vector-amplitude-barplots-pattern}
-# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Pattern", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+if (params$test_mode) {
+  Plot_channel_magnitudes(df_stats, df_moco, "", "1F1", "Pattern", .01, FALSE)
+} else {
+  Plot_channel_magnitudes(df_stats, df_moco, params$group, params$harmonic, "Pattern", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+}
 ```
 
 ```{r figX-vector-amplitude-barplots-speed}
-# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Speed", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+if (params$test_mode) {
+  Plot_channel_magnitudes(df_stats, df_moco, "", "1F1", "Speed", .01, FALSE)
+} else {
+  Plot_channel_magnitudes(df_chan_stats, df_moco, params$group,
+                          params$harmonic, "Speed",
+                          as.numeric(params$p_thresh), 
+                          plot_titles=params$plot_titles)
+}
 ```
 
 ```{r figX-vector-amplitude-barplots-pattbyspd}
-# plot_channel_magnitudes(df_chan_stats, df_moco, params$group, params$harmonic, "Patt_Spd", as.numeric(params$p_thresh), plot_titles=params$plot_titles)
+# if (params$test_mode) {
+#   Plot_channel_magnitudes(df_stats, df_moco, "", "1F1", "Patt_Spd", .01, FALSE)
+# } else {
+#   Plot_channel_magnitudes(df_chan_stats, df_moco, params$group,
+#                           params$harmonic, "Patt_Spd",
+#                           as.numeric(params$p_thresh),
+#                           plot_titles=params$plot_titles)
+# }
 ```

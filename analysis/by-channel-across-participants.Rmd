@@ -12,7 +12,7 @@ params:
   data_dir: data/csv_indiv/
   egi_path: data/egi.csv
   harmonic: 1F1
-  test_mode: TRUE
+  test_mode: FALSE
   group: Infants
   p_thresh: .01
   plot_titles: FALSE
@@ -21,6 +21,10 @@ params:
 ## Description
 
 This document produces scatter plots of the real and imaginary SSVEP components at the harmonic given by the YAML parameter, `params$harmonic`, for all 128 channels. The default harmonic value is `r params$harmonic`.
+
+The document also plots channel-wise results from separate ANOVAs on the real (Sr) and imaginary (Si) components of the SSVEP at the default harmonic.
+
+It also includes barplots of the vector amplitude means (across participants) for results thresholded at $p<$ `r params$p_thresh` as specified in the YAML parameter `params$p_thresh`.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, error = FALSE)
@@ -149,9 +153,7 @@ if (params$test_mode) {
 }
 ```
 
-Prepare to plot topo plot
-
-```{r}
+```{r prep-for-topo-plot}
 # Load EGI coordinates
 df_egi <- read_csv(params$egi_path)
 
@@ -365,6 +367,8 @@ Plot_channel_magnitudes <- function(df_chan_stats, df_moco,
 }
 ```
 
+### Pattern effects: `r params$harmonic`: $p<$ `r params$p_thresh`
+
 ```{r figX-vector-amplitude-barplots-pattern}
 if (params$test_mode) {
   Plot_channel_magnitudes(df_stats, df_moco, "", "1F1", "Pattern", .01, FALSE)
@@ -373,11 +377,13 @@ if (params$test_mode) {
 }
 ```
 
+### Speed effects: `r params$harmonic`: $p<$ `r params$p_thresh`
+
 ```{r figX-vector-amplitude-barplots-speed}
 if (params$test_mode) {
   Plot_channel_magnitudes(df_stats, df_moco, "", "1F1", "Speed", .01, FALSE)
 } else {
-  Plot_channel_magnitudes(df_chan_stats, df_moco, params$group,
+  Plot_channel_magnitudes(df_stats, df_moco, params$group,
                           params$harmonic, "Speed",
                           as.numeric(params$p_thresh), 
                           plot_titles=params$plot_titles)

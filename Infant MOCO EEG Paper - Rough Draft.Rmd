@@ -1,0 +1,31 @@
+---
+title: Infant brain responses differentiate between optic flow patterns and motion
+  speeds
+author: "Rick O. Gilmore, Andrea R. Seisler, Alyssa A. Pandos"
+date: "2/8/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Infant Brain Responses Differentiate Between Optic Flow Patterns and Motion Speeds
+## Abstract
+
+##Introduction
+
+##Methods and Materials 
+
+###Participants
+
+###Stimuli
+
+###Procedures
+
+##Results
+
+##Discussion
+
+##Conclusions 
+
+##References

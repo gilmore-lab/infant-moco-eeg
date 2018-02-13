@@ -1,0 +1,4 @@
+
+Fig 1: 1F1 Responses to Slow and Fast Speeds</br> <img src="../../analysis/results/1F1/1F1-by-channel-across-participants_files/figure-markdown_github-ascii_identifiers/figX-complex-domain-speed-1.png">
+
+Fig 2: 2F1 Responses to Linear and Radial Patterns</br> <img src="../../analysis/results/2F1/2F1-by-channel-across-participants_files/figure-markdown_github-ascii_identifiers/figX-complex-domain-pattern-1.png">

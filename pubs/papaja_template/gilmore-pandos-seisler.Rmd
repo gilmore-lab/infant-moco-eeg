@@ -58,6 +58,8 @@ library("tidyverse")
 # Seed for random number generation
 set.seed(42)
 ```
+
+
 #Abstract
 
   Optic flow informs infants' perception of the geometry, speed, and motion of objects in their environment and their own movements through space. Prior research suggests that infants show larger amplitude electroencephalographic (EEG) responses to direction-reversing linear patterns of optic flow (Gilmore et al., 2007). Infants also show larger EEG responses to coherence-modulating radial flow patterns when the motion speeds are faster (Hou et al., 2009).

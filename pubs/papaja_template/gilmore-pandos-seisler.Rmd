@@ -38,6 +38,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, error=FALSE)
+library(tidyr)
 ```
 
 ```{r load_packages, include = FALSE}
@@ -109,8 +110,6 @@ To view it, see the R Markdown file in the [GitHub repository](http://github.com
 
 
 # Discussion {#discussion}
-
-\newpage
 
 
 # References

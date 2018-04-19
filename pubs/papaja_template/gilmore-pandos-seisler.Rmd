@@ -1,0 +1,154 @@
+---
+title             : "Infant brain responses differentiate between optic flow patterns and motion speeds"
+shorttitle        : 
+author: 
+  - name          : "Rick O. Gilmore"
+    affiliation   : "1,2"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Department of Psychology, The Pennsylvania State University, University Park, PA 16802 USA"
+    email         : "rogilmore@psu.edu"
+  - name          : "Alyssa Pandos"
+    affiliation   : "1"
+  - name          : "Andrea R. Seisler"
+    affiliation   : "1"
+affiliation:
+  - id            : "1"
+    institution   : "The Pennsylvania State University"
+  - id            : "2"
+    institution   : 
+author_note: |
+  The authors are with the Department of Psychology at The Pennsylvania State University.
+  The authors acknowledge support from the Department of Psychology and the Social, Life, & Engineering Sciences Imaging Center (SLEIC).
+abstract: |
+keywords          : "APA, R Markdown"
+wordcount         : "Not that many."
+bibliography      : ["r-references.bib", "references.bib"]
+figsintext        : no
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+lineno            : yes
+lang              : "english"
+class             : "man"
+output            : papaja::apa6_pdf
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, error=FALSE)
+library(tidyr)
+```
+
+```{r load_packages, include = FALSE}
+if(!require("papaja")){devtools::install_github("crsh/papaja")}
+library("papaja")
+
+# May need this for newer versions of R (needed for R 3.4.1)
+# devtools::install_github("crsh/papaja")
+
+if(!require("tidyverse")){install.packages("tidyverse")}
+library("tidyverse")
+
+# Could also source("R/Install_load_package.R") and then
+# lapply(c("papaja", "tidyverse"), Install_load_package)
+```
+
+```{r analysis_preferences}
+# Seed for random number generation
+set.seed(42)
+```
+# Abstract {#abstract}
+
+Optic flow informs infants' perception of the geometry, speed, and motion of objects in their environment and their own movements through space. 
+Prior research suggests that infants show larger amplitude electroencephalographic (EEG) responses to direction-reversing linear patterns of optic flow (Gilmore et al., 2007). 
+Infants also show larger EEG responses to coherence-modulating radial flow patterns when the motion speeds are faster (Hou et al., 2009). 
+Behavioral studies in nonhuman primates indicate that infant monkeys show an early sensitivity to fast linear motion (Kiorpes & Movshon, 2004). 
+Computational analyses suggest that fast linear optic flow is common in infants' natural environments (Gilmore et al., 2015). 
+Moreover, human children 4-8 years old show larger amplitude EEG responses to fast radial and rotational optic flow (Gilmore, Thomas & Fesi, 2016) and analogous behavioral responses in a psychophysical task. 
+This suggests that the motion processing network undergoes prolonged development throughout childhood.
+
+To provide a direct comparison with prior child neural data, high density (128 channel) EEG responses were recorded from (n=23; 13 female) 17- to 38-week-old infants who viewed two different patterns (radial and linear) of optic flow presented at two different speeds (2 and 8 deg/s). 
+Flow patterns were generated from white dots moving on a black background, with the degree of motion coherence varying from 100% (coherent) to 0% (incoherent/random) every 833 ms, resulting in a first harmonic (1F1) of 1.2 Hz. 
+The EEG data were cleaned and filtered before being subjected to a frequency domain analysis using a discrete Fourier transform. 
+This analysis provided data about complex domain responses to the optic flow stimulus at low-order integer harmonics of the coherence modulating frequency (e.g., 1F1, 2F1, 3F1).
+
+At the first harmonic (1F1; 1.2 Hz), infants showed a small cluster of left frontal channels that showed higher amplitude responses to translational patterns and a larger cluster over the posterior midline that showed higher amplitude and distinct phase responses to faster speeds.
+At the second harmonic (2F1; 2.4 Hz), there was a cluster of left frontal channels that showed higher amplitudes to radial motion, a group of left lateral channels that showed higher amplitudes to faster speeds, and a right lateral cluster that showed a pattern by speed interaction. 
+Results from the third harmonic (3F1; 3.6 Hz) showed a small left frontal cluster of channels with higher responses to radial motion and two left and right central clusters where EEG phases, amplitudes, or both distinguished between the two speed conditions.
+
+Taken together, the results show that infant brain responses to coherence-modulating optic flow differ both from prior EEG results using direction-changing optic flows (Gilmore et al., 2007) and from those recorded in older children using identical displays (Gilmore, et al., 2016).
+Faster (8 deg/s vs. 2 deg/s) speeds tend to evoke larger amplitude EEG responses, consistent with predictions, but radial flows activated larger amplitude responses than linear flows, in contrast with predictions. 
+Moreover, the spatial pattern of channels showing speed or pattern sensitivity differs between infants, children, and adults. 
+The network of brain systems that detect and respond to optic flow may undergo patterns of development that are more idiosyncratic or individual-specific and less systematic than indicated by previous findings.
+
+# Methods {#methods}
+
+## Participants {#participants}
+
+23 infants, (13  female) between 3 and 8 months of age participated in the study. 
+The mean age was X months (SD=X). 
+The sample consisted of infants drawn from a database of families in Centre County, Pennsylvania. 
+Infants were excluded if they were born prematurely, had a history of serious visual or medical problems, epilepsy, or seizures. 
+All infants tested had normal pattern vision as evaluated with Teller Acuity Cards, a measure of visual function designed for non-verbal participants.
+We obtained written consent to participate from parents or guardians on behalf of the infants under procedures approved by the Institutional Review Board of The Pennsylvania State University (#37946). 
+The research was conducted according to the principles expressed in the Declaration of Helsinki.
+
+### Stimuli
+
+Participants viewed limited lifetime random-dot kinematograms generated by a Macintosh G4 computer using PowerDiva Video software (version 3.4, Smith-Kettlewell Eye Research Institute) connected to a monochrome Mitsubishi Std Diamondtron 2060u monitor with an 800 x 600 pixel resolution and a refresh rate of 72 Hz. 
+All patterns were displayed in an annular region 24 deg in outer and 4.8 deg inner diameter at the 60 cm viewing distance. 
+The display consisted of white (81.2 cd/m2) dots on a black (0.5 cd/m2) background.
+Dots were 7 arc min (.12 deg) in diameter and plotted at a density of 7.35 dot/deg2. 
+The displays alternated between globally coherent (100% coherent) and globally incoherent (0% coherent) motion every 417 ms. 
+A complete on/off cycle lasted 833 ms, for a fundamental frequency (1F1) of 1.2 Hz. The frame rate for updating dot positions was 24 Hz (1F2); dot positions were updated every 3 screen refresh cycles. During incoherent motion, the range of possible dot directions on each update cycle was 360 deg. During coherent motion dot directions on each update were specified by the type of global motion pattern condition. 
+Two types of global motion patterns were displayed -- left and right translation, and radial expansion and contraction. 
+In order to reduce response adaptation, the direction of motion reversed every other cycle (at 0.6 Hz). 
+Each pattern was shown at two speeds: 2, and 8 deg/s, forming a total of four conditions. 
+Dot speeds in both the incoherent and coherent phases within a motion speed condition were identical. 
+Each trial consisted of 10 cycles of coherent/incoherent motion. 
+Three to five trials per condition were collected contingent on the length of time that the infant was quiet and attentive in a single laboratory testing session. The maximum dot lifetime was 100 dot updates (4.17s); 1% of the dots were repositioned on each update on a fixed schedule. The relatively long dot maximum lifetime was used to reduce low frequency luminance artifacts that can result from more frequent dot repositioning.
+
+
+## Material {#material}
+
+
+## Procedure {#procedure}
+
+Upon arrival at the laboratory, study and visit procedures were described and informed consent was obtained. 
+Visual acuity was measured for each participant with the Teller Acuity cards. 
+After net fitting participants were escorted to the testing room with their parent and seated on an adjustable chair on their parents lap in front of the computer monitor. 
+After net placement, electrode impedances were checked. When impedances met testing criteria (at 50kΩ or below), lights were dimmed and the session began. 
+The experimenter remained in the testing room to attract the infant's attention to the stimuli with small toys in the center of the display. 
+If the infant was not attending, that section of EEG waveform was marked so it was not utilized during the post processing procedures. 
+The entire testing session took about 45 min. 
+
+## EEG Collection  
+
+A 128-channel HydroCel Geodesic Sensor Net (Electrical Geodesics, Inc.) was used in conjunction with NetStation 4.1 software to record SSVEP responses to the stimuli. 
+EEG was sampled rate of 432.43 Hz, referenced to Cz, and the signal was low-pass filtered at 50 Hz [ref(70)] prior to analysis. Amplitude modulations that exceeded 200µV were rejected as artifact. 
+Trials that had 15% of coherent/incoherent cycles rejected by these criteria were excluded from analysis. 
+Infants who produced fewer than three trials per condition were also excluded. 
+A total of 12 children were excluded from analysis; 1 was excluded due to too few trials, 2 refused to wear the EEG net, 4 post processing errors, and 5 others were excluded due to equipment malfunction. 
+In total, 17 children were included in the analysis (mean age=X months; SD=X).
+
+## Data analysis {#data-analysis}
+We used `r cite_r("r-references.bib")` for all our analyses.
+The code used to generate these analyses is embedded in this document.
+To view it, see the R Markdown file in the [GitHub repository](http://github.com/psu-psychology/r-bootcamp/papaja-demo/) associated with this paper.
+
+
+# Results {#results}
+
+
+# Discussion {#discussion}
+
+
+# References
+
+```{r create_r-references}
+r_refs(file = "r-references.bib")
+```
+
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
